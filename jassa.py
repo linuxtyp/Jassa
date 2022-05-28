@@ -120,8 +120,8 @@ verbose = 1
 cores = 6
 global p1m,p2m,p3m,email1,email2,email3,password
 #Gamemodes of the diffrent Players. 0 = Bot, 1 = Local, 2 = Email, 3 = Client
-p1m=0
-p2m=0
+p1m=3
+p2m=1
 p3m=0
 if p1m == 2 or p2m == 2 or p3m == 2:
 	password = getpass()
@@ -166,11 +166,12 @@ if p1m == 3 or p2m == 3 or p3m == 3:
 	
 	
 def mai(content,recepient):
-	mailserver = smtplib.SMTP('mtmayr.com',587)
+	m_server = ""
+	mailserver = smtplib.SMTP(m_server,587)
 	mailserver.ehlo()
 	mailserver.starttls()
-	mailserver.login('manuel@mtmayr.com', password)
-	mailserver.sendmail('manuel@mtmayr.com',recepient,content)
+	mailserver.login('', password)
+	mailserver.sendmail('',recepient,content)
 	mailserver.quit()
 	print("mail sent to: ",recepient)
 def initialize_deck():
