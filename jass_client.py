@@ -67,15 +67,19 @@ class MainApp(MDApp):
 		print("Received")
 	def connect(self):
 		global s
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.connect((socket.gethostname(),1234))
-		x = 0
-		while x == 0:
-			unenc = s.recv(1024)
-			msg = (unenc.decode("utf-8"))
-			self.root.ids.Karten.text = msg
-			print("Received")
-			x = 1
+		try: 
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			s.connect((socket.gethostname(),1234))
+
+			x = 0
+			while x == 0:
+				unenc = s.recv(1024)
+				msg = (unenc.decode("utf-8"))
+				self.root.ids.Karten.text = msg
+				print("Received")
+				x = 1
+		except:
+			self.root.ids.Karten.text = "Failed to connect"
 	def disconnect(self):
 		s.stop(clientsocket)
 MainApp().run()
