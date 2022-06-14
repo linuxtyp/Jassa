@@ -1,114 +1,24 @@
-import numpy as np
 import random
 import re
 import threading
 from multiprocessing import Pool, cpu_count
 import multiprocessing as mg
-#import tensorflow as tf
 from passlib.hash import bcrypt
 from getpass import getpass
 import smtplib
 import sys
-import matplotlib
-import nnfs
-from nnfs.datasets import spiral_data
-nnfs.init()
-np.random.seed(0)
 import math
 import socket
-
-
+import imaplib
+import email
+from email.header import decode_header
+import webbrowser
+import os
+import re
+import time
 #The goal would be to convert the random Bots to a neural network....
 
-"""
-def spiral_data(points, classes):
-    X = np.zeros((points*classes, 2))
-    y = np.zeros(points*classes, dtype='uint8')
-    for class_number in range(classes):
-        ix = range(points*class_number, points*(class_number+1))
-        r = np.linspace(0.0, 1, points)  # radius
-        t = np.linspace(class_number*4, (class_number+1)*4, points) + np.random.randn(points)*0.2
-        X[ix] = np.c_[r*np.sin(t*2.5), r*np.cos(t*2.5)]
-        y[ix] = class_number
-    return X, y
-import matplotlib.pyplot as plt
-X,y=spiral_data(100,3)
-"""
 
-#Part 4:
-class Layer_Dense:
-	def __init__(self,n_inputs,n_neurons):
-		self.weights = 0.1*np.random.randn(n_inputs,n_neurons)
-		self.biases = np.zeros((1, n_neurons))
-	def forward(self,inputs):
-		self.output = np.dot(inputs,self.weights) + self.biases
-class Activation_ReLU:
-	def forward(self,inputs):
-		self.output = np.maximum(0,inputs)
-class Activation_Softmax:
-	def forward(self,inputs):
-		exp_values = np.exp(inputs - np.max(inputs,axis=1,keepdims=True)) # - max... for anitoverflow
-		probabilities = exp_values / np.sum(exp_values,axis=1, keepdims=True)
-		self.output = probabilities
-class Loss:
-	def calculate(self,output,y):
-		sample_losses = self.forward(output,y)
-		data_loss = np.mean(sample_losses)
-		return data_loss
-class Loss_CategoricalCrossentropy(Loss):
-	def forward(self,y_pred,y_true):
-		samples=len(y_pred)
-		y_pred_clipped=np.clip(y_pred,1e-7,1-1e-7)
-		if len(y_true.shape) == 1:
-			correct_cofidences = y_pred_clipped[range(samples),y_true]
-		elif len(y_true.shape) == 2:
-			correct_cofidences = np.sum(y_pred_clipped*y_true, axis=1)
-		negative_log_likelihoods = -np.log(correct_cofidences)
-		return negative_log_likelihoods
-#X,y = spiral_data(samples= 100,classes=3)
-#dense1 = Layer_Dense(2,3)
-#activation1 = Activation_ReLU()
-#dense2 = Layer_Dense(3,3)
-#activation2 = Activation_Softmax()
-#dense1.forward(X)
-#activation1.forward(dense1.output)
-#
-#dense2.forward(activation1.output)
-#activation2.forward(dense2.output)
-#print(activation2.output[:5])
-#
-#loss_function = Loss_CategoricalCrossentropy()
-#loss = loss_function.calculate(activation2.output, y)
-#print("Loss:" , loss)
-
-
-"""
-print(bcrypt.setting_kwds)
-# ('salt', 'rounds', 'ident', 'truncate_error')
-print(bcrypt.default_rounds)
-# 12
-
-hasher = bcrypt.using(rounds=13)  # Make it slower
-
-password = getpass()
-hashed_password = hasher.hash(password)
-print(hashed_password)
-# $2b$13$H9.qdcodBFCYOWDVMrjx/uT.fbKzYloMYD7Hj2ItDmEOnX5lw.BX.
-
-# Alg Rounds  Salt (22 char)            Hash (31 char)
-
-print(hasher.verify(password, hashed_password))
-# True
-"""
-
-#port = 465  # For SSL
-#password = input("Type your password and press enter: ")
-#
-## Create a secure SSL context
-#context = ssl.create_default_context()
-#
-#with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
-#    server.login("mn05mayrhofer@gmail.com", password)
 
 
 
@@ -118,24 +28,38 @@ print(hasher.verify(password, hashed_password))
 
 verbose = 1
 cores = 6
-global p1m,p2m,p3m,email1,email2,email3,password
 #Gamemodes of the diffrent Players. 0 = Bot, 1 = Local, 2 = Email, 3 = Client
-p1m=3
-p2m=1
-p3m=0
-if p1m == 2 or p2m == 2 or p3m == 2:
-	password = getpass()
+players = [0,0,0,0]
 #Put in the email addr of the players
-email1=""
-email2=""
-email3=""
+mail_addr = ["","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""]
+
+imap_server=""#your server
+your_email=""#your email
+mail_refresh = 4
+
+cycle = 2*[["pl"+str(x+1),x+1] for x in range(len(players))]
+for x in range(len(players)):
+	if players[x] == 2:
+		global imap,num
+		y = True
+		while y:
+			try:
+				password = getpass()
+				username = your_email
+				imap = imaplib.IMAP4_SSL(imap_server)
+				imap.login(username, password)
+				y = False
+			except:
+				time.sleep(2)
+				y = True
 
 
 
 cards = ["6","7","8","9","10","Unter","Ober","Konig","Ass"]
-farben = ["Schelle","Eichel","Herz", "Laub"]
+farben = ["Schelle","Herz","Laub","Eichel"]
 deck = ["" for i in range(36)]
 wertigkeit = [["Bur",20,1],["Nell",14,2],["Ass",11,3],["Konig",4,4],["Ober",3,5],["Unter",2,6],["10",10,7],["9",0,8],["8",0,9],["7",0,10],["6",0,11]]
+wertigkeit_tr = [["Bur",20,1],["Nell",14,2],["Ass",11,3],["Konig",4,4],["Ober",3,5],["10",10,6],["8",0,7],["7",0,8],["6",0,9]]
 class server:
 	
 	def on(self):
@@ -157,23 +81,76 @@ class server:
 		deco=int(re.decode("utf-8"))
 		return deco
 
+for x in range(len(players)):
+	if players[x]==3:
+		global s
+		s = server()
+		clientsocket=s.on()
 
-if p1m == 3 or p2m == 3 or p3m == 3:
-	global s
-	s = server()
-	clientsocket=s.on()
 
-	
-	
+
 def mai(content,recepient):
-	m_server = ""
-	mailserver = smtplib.SMTP(m_server,587)
-	mailserver.ehlo()
-	mailserver.starttls()
-	mailserver.login('', password)
-	mailserver.sendmail('',recepient,content)
-	mailserver.quit()
+	x = 0
+	while x == 0:
+		try:
+			mailserver = smtplib.SMTP(imap_server,587)
+			mailserver.ehlo()
+			mailserver.starttls()
+			mailserver.login(your_email, password)
+			mailserver.sendmail(your_email,recepient,content)
+			mailserver.quit()
+			x = 1
+		except:
+			x = 0
+			print("Mailing to %s failed. Try again in 10 seconds."% recepient)
+			time.sleep(10)
 	print("mail sent to: ",recepient)
+def read_mail(messages,N,imap):
+	for i in range(messages, messages-N, -1):
+	    # fetch the email message by ID
+	    res, msg = imap.fetch(str(i), "(RFC822)")
+	    for response in msg:
+	        if isinstance(response, tuple):
+	            # parse a bytes email into a message object
+	            msg = email.message_from_bytes(response[1])
+	            # decode the email subject
+	            subject, encoding = decode_header(msg["Subject"])[0]
+	            if isinstance(subject, bytes):
+	                # if it's a bytes, decode to str
+	                subject = subject.decode(encoding)
+	            # decode email sender
+	            From, encoding = decode_header(msg.get("From"))[0]
+	            if isinstance(From, bytes):
+	                From = From.decode(encoding)
+	            #print("Subject:", subject)
+	            #print("From:", From)
+	            # if the email message is multipart
+	            if msg.is_multipart():
+	                # iterate over email parts
+	                for part in msg.walk():
+	                    # extract content type of email
+	                    content_type = part.get_content_type()
+	                    content_disposition = str(part.get("Content-Disposition"))
+	                    try:
+	                        # get the email body
+	                        body = part.get_payload(decode=True).decode()
+	                    except:
+	                        pass
+	                    if content_type == "text/plain" and "attachment" not in content_disposition:
+	                        # print text/plain emails and skip attachments
+	                        #print("\n",body)
+	                        return body
+	            else:
+	                # extract content type of email
+	                content_type = msg.get_content_type()
+	                # get the email body
+	                body = msg.get_payload(decode=True).decode()
+	                if content_type == "text/plain":
+	                    # print only text email parts
+	                    #print(body,"else")
+	                    return body
+	                return body
+	            #print("="*100)
 def initialize_deck():
 	i=0
 	for x in range(len(farben)):
@@ -185,17 +162,20 @@ def show_deck():
 	for x in range(36):
 		print(deck[x])
 def shuffle(deck):
-	np.random.seed(random.randint(1,100000000))
-	np.random.shuffle(deck)
+	random.shuffle(deck)
 	return deck
 
-
+class player():
+	def init(self):
+		return [["" for i in range(int(36/len(players)))],0]
 def init_game():
-	p1=[["" for i in range(12)],0]
-	p2=[["" for i in range(12)],0]
-	p3=[["" for i in range(12)],0]
-	tabel = [["","",""],["","",""],["","",""]]
-	return tabel,p1,p2,p3
+	p =["p"+str(i+1) for i in range(len(players))]
+	#print(p)
+	for i in range(len(players)):
+		p[i] = [["" for i in range(int(36/len(players)))],0]
+	#print(p)
+	tabel=[["","",""]for i in range(len(players))]
+	return tabel,p
 def abheben():
 	i=random.randint(0,36)
 	f_half=["" for i in range(i)]
@@ -212,125 +192,129 @@ def abheben():
 
 
 
-def give_cards(verbose,deck,p1,p2,p3):
+def give_cards(verbose,deck,p):
 	i=0
 	res = re.findall(r'\w+', deck[-1])
-	trumpf=res[1]
+
+
+	def find_trumpf(deck,p):
+		if len(players)%2 == 0:
+		
+			if players[0] == 0:
+				trumpf=p[0][0][random.randint(0,len(p[0][0])-1)][1]
+			if players[0] == 1:
+				print(p[0][0])
+				while x:
+					try:
+						trumpf = input("\n Des sind dine Karta. Seg Trumpf a: Schelle 0, Herz 1, Laub 2, Eichel 3: ")
+						trumpf = farben[int(trumpf)]
+						x=False
+					except:
+						x = True
+			if players[0] == 2:
+				num = random.randint(1,90000)
+				intuitive=intu(p[0][0],"")
+				meil = """\
+From: %s
+Subject: Trumpf
+ID%s
+Dine Karta: %s
+Seg Trumpf a: Schelle 0, Herz 1, Laub 2, Eichel 3
+Schrib di numma fo dinam Trumpf zruck.
+"""%(your_email,num,intuitive)
+				mai(meil,mail_addr[0])
+				trumpf = farben[int(waiting(num))]
+			if players[0] == 3:
+				trumpf=p[len(players)-1][0][random.randint(0,len(p[0][0]))][1]
+				
+		elif len(players)%3 == 0:
+			trumpf=p[len(players)-1][0][int(36/len(players))-1][1]
+			print(p[len(players)-1][0][int(36/len(players))-1],"hot ",cycle[len(players)-1][0])
+		else:
+			trumpf=deck[35].split()[0::1][1]
+
+			#print(Gschloapft: trumpf)
+		return trumpf
+	def bur_nell(p,trumpf):	
+		for x in range(len(players)):
+			for y in range(int(36/len(players))):
+				if p[x][0][y] == ["Unter",trumpf]:
+					p[x][0][y] = ["Bur", trumpf]
+				if p[x][0][y] == ["9",trumpf]:
+					p[x][0][y] = ["Nell", trumpf]
+		return p
+
+	for x in range(len(players)):
+			for y in range(int(36/len(players))):
+				p[x][0][y]=deck[y+x*int(36/len(players))]
+	
+	for x in range(len(players)):
+		p[x][0]=[item.split()[0::1] for item in p[x][0]]
+	trumpf=find_trumpf(deck,p)
+
+	p=bur_nell(p,trumpf)
+	#print(p,trumpf)
 	if verbose == 1:
 		print("\n",trumpf,"\n")
-	cycle = ["p1","p2","p3"]
-	def bsundrig(v,deck):
-		farb = re.findall(r'\w+', deck[v])
-		if farb == ["Unter",trumpf]:
-			deck[x] = "Bur" + " " + trumpf
-		if farb == ["9",trumpf]:
-			deck[x] = "Nell"+ " " + trumpf
-	for x in range(36):
-		if i == 3:
-			i = 0
-		if i == 2:
-			bsundrig(x,deck)
-			p1[0][p1[1]]=deck[x]
-			p1[1] += 1
-			i=3
-		if i == 1:
-			bsundrig(x,deck)
-			p2[0][p2[1]]=deck[x]
-			p2[1] += 1
-			i = 2
-		if i == 0:
-			bsundrig(x,deck)
-			p3[0][p3[1]]=deck[x]
-			p3[1] += 1
-			i = 1
-	
-	p1[1] = 0
-	p2[1] = 0
-	p3[1] = 0
 
-	p1[0]=[item.split()[0::1] for item in p1[0]]
-	p2[0]=[item.split()[0::1] for item in p2[0]]
-	p3[0]=[item.split()[0::1] for item in p3[0]]
-	return trumpf,p1,p2,p3
+	return trumpf,p
 def inde(liste,str):
-	a=0
-	for x in range(len(liste)):
-		if liste[x][0] == str:
-			return x
-def turn(round,tabel,p1,p2,p3,verbose,trumpf):
+	for a in range(len(liste)):
+		if liste[a][0] == str:
+			return a
+def stich(tabel,trumpf):
+	cases=0
+	which = 0
+	max = 100,0
+	for x in range(len(players)):
+		if tabel[x][1] == trumpf:
+			if inde(wertigkeit,tabel[x][0]) < max[0] :
+				max = inde(wertigkeit,tabel[x][0]),x
+		else:
+			if inde(wertigkeit,tabel[x][0]) + 19 < max[0] and tabel[0][1] == tabel[x][1]:
+				max = inde(wertigkeit,tabel[x][0]) + 19,x
+	which = max[1]
+	if which < 11:
+		return cycle[cycle.index([tabel[which][2],int(tabel[which][2][2])])][1]-1
+	else:
+		return cycle[cycle.index([tabel[which][2],int(str(tabel[which][2][2])+str(tabel[which][2][3]))])][1]-1	
+
+def count(tabel):
+	points = 0
+	for q in range(len(players)):
+		points += wertigkeit[inde(wertigkeit,tabel[q][0])][1]
+	return points
+def turn(round,tabel,verbose,trumpf,p):
 	
 	if round == 0:
-		tabel = [["","",""],["","",""],["","",""]]
+		tabel=[["","",""]for i in range(len(players))]
 		global table_last
-		table_last=tabel
-		tabel,p1=pl1(0,tabel,p1,trumpf)
-		tabel,p2=pl2(1,tabel,p2,trumpf)
-		tabel,p3=pl3(2,tabel,p3,trumpf)
+		table_last = tabel
+		tabel,p=pl(0,tabel,p,trumpf)
 		if verbose == 1:
 			print("Table: ",tabel,"\n")
 
-	else: 
-		def stich(tabel):
-			max = [21,0]
-			for y in range(3):
-				for z in range(len(wertigkeit)):
-					if wertigkeit[z][0] == tabel[y][0]:
-						if (wertigkeit[z][2] < max[0] and tabel[0][1] == tabel[y][1]):
-							max = wertigkeit[z][2],y
-			if tabel[0][1] != trumpf and (tabel[1][1] == trumpf or tabel[2][1] == trumpf):
-				if tabel[2][1] != trumpf:	
-					max = inde(wertigkeit,tabel[max[1]][0]),1
-				if tabel[1][1] != trumpf:
-					max = inde(wertigkeit,tabel[max[1]][0]),2
-				if tabel[2][1] == trumpf and tabel[1][1] == trumpf:
-					if inde(wertigkeit,tabel[1][0]) < inde(wertigkeit,tabel[2][0]):
-						max = inde(wertigkeit,tabel[1][0]),1
-					else:
-						max = inde(wertigkeit,tabel[2][0]),2
-			return max
 
-		def count(tabel):
-			points = 0
-			for q in range(3):
-				points += wertigkeit[inde(wertigkeit,tabel[q][0])][1]
-			return points
-		max=stich(tabel)
+		if round == int(36/len(players))-1:
+			max=stich(tabel,trumpf)
+			p[max][1] += 5
+			p[max][1] += count(tabel)
+
+	else: 
 		table_last=tabel
-		if tabel[max[1]][2] == "pl1":
-			p1[1] += count(tabel)
-			tabel = [["","",""],["","",""],["","",""]]
-			tabel,p1=pl1(0,tabel,p1,trumpf)
-			tabel,p2=pl2(1,tabel,p2,trumpf)
-			tabel,p3=pl3(2,tabel,p3,trumpf)
-			if verbose == 1:
-				print("Table: ",tabel,"\n")
-			if round == 11:
-				max=stich(tabel)
-				p1[1] += count(tabel)
-				p1[1] += 5
-		elif tabel[max[1]][2] == "pl2":
-			p2[1] += count(tabel)
-			tabel = [["","",""],["","",""],["","",""]]
-			tabel,p2=pl2(0,tabel,p2,trumpf)
-			tabel,p3=pl3(1,tabel,p3,trumpf)
-			tabel,p1=pl1(2,tabel,p1,trumpf)
-			if verbose == 1:
-				print("Table: ",tabel,"\n")
-			if round == 11:
-				p2[1] += 5
-				p2[1] += count(tabel)
-		else:
-			p3[1] += count(tabel)
-			tabel = [["","",""],["","",""],["","",""]]
-			tabel,p3=pl3(0,tabel,p3,trumpf)
-			tabel,p1=pl1(1,tabel,p1,trumpf)
-			tabel,p2=pl2(2,tabel,p2,trumpf)
-			if verbose == 1:
-				print("Table: ",tabel,"\n")
-			if round == 11:
-				p3[1] += 5
-				p3[1] += count(tabel)
-	return tabel,p1,p2,p3
+		max=stich(tabel,trumpf)
+		p[max][1] += count(tabel)
+		tabel = tabel=[["","",""]for i in range(len(players))]
+		tabel,p=pl(max,tabel,p,trumpf)
+		
+		
+		if verbose == 1:
+			print("Table: ",tabel,"\n")
+		if round == int(36/len(players))-1:
+			max=stich(tabel,trumpf)
+			p[max][1] += 5
+			p[max][1] += count(tabel)
+	return tabel,p
 def allowed(order,p,tabel,trumpf):
 	alw=[]
 	if tabel[0][0] == "":
@@ -365,49 +349,134 @@ def allowed(order,p,tabel,trumpf):
 		err=p[0].copy()
 	return err
 
-
-
-def plx(alw,tabel,p,order,name,x,recepient,trumpf):
-
+def gen_X(trumpf,tabel,order,alw):
+	order_ohe=[-1,-1,-1]
+	order_ohe[order]=1
 	
-	def intu(alw):
-		intuitive=[["","",""] for i in range(len(alw))]
-		for y in range(len(alw)):
-			intuitive[y][0]=(alw[y][0])
-			intuitive[y][1]=alw[y][1]
-			intuitive[y][2]=str(y)
-		return intuitive
+	def cards_to_int(cards):
+		deckset = [-1 for i in range(36)]
+		for x in range(len(cards)):
+			if cards[x][1] == "Schelle":
+				if cards[x][1] == trumpf:
+					deckset[(wertigkeit_tr[inde(wertigkeit_tr,cards[x][0])][2])-1]=1
+				else:
+					deckset[(wertigkeit[inde(wertigkeit,cards[x][0])][2])-3]=1
+			if cards[x][1] == "Herz":
+				if cards[x][1] == trumpf:
+					deckset[(wertigkeit_tr[inde(wertigkeit_tr,cards[x][0])][2])+8]=1
+				else:
+					deckset[(wertigkeit[inde(wertigkeit,cards[x][0])][2])+6]=1
+			if cards[x][1] == "Laub":
+				if cards[x][1] == trumpf:
+					deckset[(wertigkeit_tr[inde(wertigkeit_tr,cards[x][0])][2])+17]=1
+				else:
+					deckset[(wertigkeit[inde(wertigkeit,cards[x][0])][2])+15]=1
+			if cards[x][1] == "Eichel":
+				if cards[x][1] == trumpf:
+					deckset[(wertigkeit_tr[inde(wertigkeit_tr,cards[x][0])][2])+26]=1
+				else:
+					deckset[(wertigkeit[inde(wertigkeit,cards[x][0])][2])+24]=1
+		return deckset
+	#print(alw)
+	deckset = cards_to_int(alw)
+
+	X=[order,deckset]
+def intu(alw,trumpf):
+	sort = [["","",""] for i in range(36)]
+	for x in range(len(alw)):
+		if alw[x][1] == "Schelle":
+			if alw[x][1] == trumpf:
+				sort[(wertigkeit_tr[inde(wertigkeit_tr,alw[x][0])][2])-1]=[alw[x][0],alw[x][1],""]
+			else:
+				sort[(wertigkeit[inde(wertigkeit,alw[x][0])][2])-3]=[alw[x][0],alw[x][1],""]
+		if alw[x][1] == "Herz":
+			if alw[x][1] == trumpf:
+				sort[(wertigkeit_tr[inde(wertigkeit_tr,alw[x][0])][2])+8]=[alw[x][0],alw[x][1],""]
+			else:
+				sort[(wertigkeit[inde(wertigkeit,alw[x][0])][2])+6]=[alw[x][0],alw[x][1],""]
+		if alw[x][1] == "Laub":
+			if alw[x][1] == trumpf:
+				sort[(wertigkeit_tr[inde(wertigkeit_tr,alw[x][0])][2])+17]=[alw[x][0],alw[x][1],""]
+			else:
+				sort[(wertigkeit[inde(wertigkeit,alw[x][0])][2])+15]=[alw[x][0],alw[x][1],""]
+		if alw[x][1] == "Eichel":
+			if alw[x][1] == trumpf:
+				sort[(wertigkeit_tr[inde(wertigkeit_tr,alw[x][0])][2])+26]=[alw[x][0],alw[x][1],""]
+			else:
+				sort[(wertigkeit[inde(wertigkeit,alw[x][0])][2])+24]=[alw[x][0],alw[x][1],""]
+	for x in range(36):
+		if sort[35-x][1] == "":
+			del sort[35-x]
+	for y in range(len(alw)):
+		sort[y][2]=str(y)
+	return sort
+def plx(tabel,p,order,name,x,recepient,trumpf):
+	alw=allowed(order,p,tabel,trumpf)
+
+
+	intuitive=intu(alw,trumpf)
 	if x == 1:
-		intuitive=intu(alw)
+		intuitive=intu(alw,trumpf)
 		print(tabel,"\n",intuitive)
 		card = int(input("Pick a card: "))
 
 	elif x == 0:
+		#gen_X(trumpf,tabel,order,alw)
 		card=random.randint(0,len(alw)-1)
 
 	elif x == 2:
-		intuitive=intu(alw)
-		global table_last
+		intuitive=intu(alw,trumpf)
+		global table_last #table_last donly works sometimes
+		num = random.randint(1,90000)
 
 
 
 		meil = """\
-From: manuel@mtmayr.com
+From: %s
 Subject: Karten
+ID%s
 Trumpf-> %s
 Last Played -> %s
 What lays on the table: %s
 Your available Cards: %s
-Tell the sender the index of you card of choice
-"""%(trumpf,table_last,tabel,intuitive)
+Please write back only the index of your card back soon.
+"""%(your_email,num,trumpf,table_last,tabel,intuitive)
 		mai(meil,recepient)
 		table_last=[]
-		card = int(input("Pick a card: "))
+		idm = 0
+		print("waiting")
+		while int(idm) != int(num):
 
-
-
+			status, messages = imap.select("INBOX")
+			messages = int(messages[0])
+			N=1
+			body=read_mail(messages,N,imap)
+			try:
+				sys.stdout.write(".")
+				sys.stdout.flush()
+				match = re.search('ID(\d+)',body)
+				idm = match.group(1)
+				card = body[0]
+				card=int(card)
+				try:
+					if int(body[1])%1==0:
+						card = body[0]+body[1]
+					#print(body[0]+body[1],body[0],body[1])
+				except:
+					pass
+				if card == "<":
+					match = re.search('class=MsoNormal>(\d+)',body)
+					card = match.group(1)
+					card=int(card)
+			except:
+				sys.stdout.write("X")
+				sys.stdout.flush()
+			time.sleep(mail_refresh)
+		num = random.randint(1,90000)
+		print("\n")
+		
 	elif x == 3:
-		intuitive=intu(alw)
+		intuitive=intu(alw,trumpf)
 		message="""
 Trumpf: %s 
 Last Played : %s
@@ -421,59 +490,79 @@ Write the index of your card:
 
 
 
+	if x != 0:
+		tabel[order][0]=intuitive[card][0]
+		tabel[order][1]=intuitive[card][1]
+		tabel[order][2]=name
+		del p[0][p[0].index([intuitive[card][0],intuitive[card][1]])]
+		return tabel,p
+	else:
+		tabel[order][0]=alw[card][0]
+		tabel[order][1]=alw[card][1]
+		tabel[order][2]=name
+		del p[0][p[0].index([alw[card][0],alw[card][1]])]
+		return tabel,p		
 
-	tabel[order][0]=alw[card][0]
-	tabel[order][1]=alw[card][1]
-	tabel[order][2]=name
-	del p[0][p[0].index(alw[card])]
+def waiting(num):
+	idm = 0
+	while int(idm) != int(num):
+		status, messages = imap.select("INBOX")
+		messages = int(messages[0])
+		N=1
+		body=read_mail(messages,N,imap)
+		try:
+			sys.stdout.write(".")
+			sys.stdout.flush()
+			match = re.search('ID(\d+)',body)
+			idm = match.group(1)
+			card = body[0]
+			try:
+				if int(body[1])%1==0:
+					card = body[0]+body[1]
+			except:
+				pass
+			if card == "<":
+				match = re.search('class=MsoNormal>(\d+)',body)
+				card = match.group(1)
+		except:
+			sys.stdout.write("X")
+			sys.stdout.flush()
+		time.sleep(mail_refresh)
+	return card
+def pl(order,tabel,p,trumpf):
+	for x in range(len(players)):
+		tabel,p[cycle[x+order][1]-1] = plx(tabel,p[cycle[x+order][1]-1],cycle[x][1]-1,cycle[x+order][0],players[cycle[x+order][1]-1],mail_addr[cycle[x+order][1]-1],trumpf)
 	return tabel,p
 
-
-
-def pl1(order,tabel,p1,trumpf):
-	alw=allowed(order,p1,tabel,trumpf)
-	tabel,p1 = plx(alw,tabel,p1,order,"pl1",p1m,email1,trumpf)
-	return tabel,p1
-def pl2(order,tabel,p2,trumpf):
-	alw=allowed(order,p2,tabel,trumpf)
-	tabel,p2 = plx(alw,tabel,p2,order,"pl2",p2m,email2,trumpf)
-	return tabel,p2
-def pl3(order,tabel,p3,trumpf):
-	alw=allowed(order,p3,tabel,trumpf)
-	tabel,p3 = plx(alw,tabel,p3,order,"pl3",p3m,email3,trumpf)
-	return tabel,p3
 def game_same_cards(verbose):
-	tabel,p1,p2,p3=init_game()
-	trumpf,p1,p2,p3=give_cards(verbose,deck,p1,p2,p3)
-	for x in range(12):
-		tabel,p1,p2,p3=turn(x,tabel,p1,p2,p3,verbose,trumpf)
-	return p1,p2,p3	
+	tabel,p=init_game()
+	trumpf,p=give_cards(verbose,deck,p)
+	for x in range(len(p[0][0])):
+		tabel,p=turn(x,tabel,verbose,trumpf,p)
+	return p
 
 def game(verbose):
-	tabel,p1,p2,p3=init_game()
-	deck=initialize_deck()
+	tabel,p=init_game()
+	deck = initialize_deck()
 	deck=shuffle(deck)
-	trumpf,p1,p2,p3=give_cards(verbose,deck,p1,p2,p3)
-	for x in range(12):
-		tabel,p1,p2,p3=turn(x,tabel,p1,p2,p3,verbose,trumpf)
-	return p1,p2,p3	
-	winner(p1[1],p2[1],p3[1],p1m,p2m,p3m)
+	trumpf,p=give_cards(verbose,deck,p)
+	for x in range(len(p[0][0])):
+		tabel,p=turn(x,tabel,verbose,trumpf,p)
+
+	winner(p)
 def games(repetitions,verbose):
 	deck=initialize_deck()
 	deck=shuffle(deck)
-	global p1_all,p2_all,p3_all
 	for ahh in range(repetitions):
-		p1,p2,p3=game_same_cards(verbose)
-		p1_all += p1[1]
-		p2_all += p2[1]
-		p3_all += p3[1]
-	winner(p1_all,p2_all,p3_all,p1m,p2m,p3m)
+		p=game_same_cards(verbose)
+
+	winner(p)
 def perfect_cards(reps):
 	def check(p,trumpf):
 		tr=0
 		bns = []
 		mit = 0
-		wertigkeit_tr = [["Bur",20,1],["Nell",14,2],["Ass",11,3],["Konig",4,4],["Ober",3,5],["10",10,6],["8",0,7],["7",0,8],["6",0,9]]
+		
 		for x in range(len(p[0])):
 			
 			if p[0][x][1] == trumpf:
@@ -490,10 +579,10 @@ def perfect_cards(reps):
 	max = [0,0]
 	quantity = 0
 	for x in range(reps):
-		tabel,p1,p2,p3=init_game2()
+		tabel,p1,p2,p3=init_game()
 		deck=initialize_deck()
 		deck=shuffle(deck)
-		trumpf,p1,p2,p3=give_cards2(verbose,deck,p1,p2,p3)
+		trumpf,p1,p2,p3=give_cards(verbose,deck,p1,p2,p3)
 		#print(p1)
 		cp = [check(p1,trumpf),check(p2,trumpf),check(p3,trumpf)]
 		for u in range(3):
@@ -530,38 +619,25 @@ def threaded(rounds):
 	  	t.start()
 	for t in threads:
 		t.join()
-def winner(p1p,p2p,p3p,p1m,p2m,p3m):
-	print("pl1: ",p1p)
-	print("pl2: ",p2p)
-	print("pl3: ",p3p)
+def winner(p):
 	meil = """\
-From: manuel@mtmayr.com
+From: %s
 Subject: Ergebnisse
-Player 1: %s
-Player 2: %s
-Player 3: %s
-"""%(p1p,p2p,p3p)
-	message = """\
-The Results:
-Player 1: %s
-Player 2: %s
-Player 3: %s
-"""%(p1p,p2p,p3p)
-	if p1m == 2:
-		mai(meil,email1)
-	if p2m == 2:
-		mai(meil,email2)
-	if p3m == 2:
-		mai(meil,email3)
-	if p1m == 3 or p2m == 3 or p3m == 3:
-		s.msg(message,clientsocket)
-		s.stop(clientsocket)
-p1_all=0
-p2_all=0
-p3_all=0
+"""%(your_email)
+	for x in range(len(players)):
+		print("pl",x+1," :",p[x][1])
+		meil=meil + str("pl"+str(x+1)+"-> "+str(p[x][1])+"\n")
+	#print(meil)
+	for x in range(len(players)):
+		if players[x] == 2:
+			mai(meil,mail_addr[x])
+		if players[x]==3:
+			s.msg(meil,clientsocket)
+			s.stop(clientsocket)
 
+
+
+#perfect_cards_threaded(10000,cores) 
 #games(1,verbose)
 #threaded(6000)
 game(verbose)
-#perfect_cards_threaded(10000,cores) 
-
