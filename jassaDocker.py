@@ -1022,6 +1022,7 @@ def menu(your_email):
 #menu(your_email)
 
 pla = int(sys.argv[4])
+print(sys.argv[4])
 name=[0 for x in range(pla)]
 players=[0 for x in range(pla)]
 for x in range(pla):
